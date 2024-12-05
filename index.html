@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Modell mit Draco Loader</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/loaders/DRACOLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+    <script>
+        // Szene und Renderer erstellen
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Licht hinzufügen
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        directionalLight.position.set(5, 5, 5).normalize();
+        scene.add(directionalLight);
+
+        const pointLight = new THREE.PointLight(0xffffff, 100, 100); // Punktlicht mit Reichweite
+        pointLight.position.set(4, 0, 6); // Direkt über dem Modell
+        scene.add(pointLight);
+
+        // Kamera-Position
+        camera.position.set(0, 2, 5);
+
+        // OrbitControls hinzufügen
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.enablePan = false; // Schwenken deaktivieren
+        controls.minDistance = 2; // Minimaler Zoom
+        controls.maxDistance = 10; // Maximaler Zoom
+        controls.target.set(0, 1, 0); // Fokuspunkt auf das Modell
+        controls.update();
+
+        // DRACOLoader einrichten
+        const dracoLoader = new THREE.DRACOLoader();
+        dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/libs/draco/'); // Pfad zu Draco-Bibliotheken
+
+        // GLTFLoader einrichten
+        const loader = new THREE.GLTFLoader();
+        loader.setDRACOLoader(dracoLoader); // Draco-Komprimierung aktivieren
+
+        // 3D-Modell laden
+        loader.load(
+            'https://nothumancollective.github.io/website/model.glb', // Ersetze durch den tatsächlichen Pfad zu deinem Modell
+            function (gltf) {
+                scene.add(gltf.scene);
+                console.log('Modell erfolgreich geladen.');
+            },
+            undefined,
+            function (error) {
+                console.error('Fehler beim Laden des Modells:', error);
+            }
+        );
+
+        // Animationsschleife
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update(); // OrbitControls aktualisieren
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Fenstergröße anpassen
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
